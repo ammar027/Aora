@@ -1,11 +1,23 @@
 import { useState } from "react";
 import { ResizeMode, Video } from "expo-av";
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image, Alert } from "react-native";
 
 import { icons } from "../constants";
 
-const VideoCard = ({ title, creator, avatar, thumbnail, video }) => {
+const VideoCard = ({ title, creator, avatar, thumbnail, video, onDelete }) => {
   const [play, setPlay] = useState(false);
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Delete Video",
+      "Are you sure you want to delete this video?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", onPress: onDelete, style: "destructive" }
+      ],
+      { cancelable: true }
+    );
+  };
 
   return (
     <View className="flex flex-col items-center px-4 mb-14">
@@ -20,23 +32,19 @@ const VideoCard = ({ title, creator, avatar, thumbnail, video }) => {
           </View>
 
           <View className="flex justify-center flex-1 ml-3 gap-y-1">
-            <Text
-              className="font-psemibold text-sm text-white"
-              numberOfLines={1}
-            >
+            <Text className="font-psemibold text-sm text-white" numberOfLines={1}>
               {title}
             </Text>
-            <Text
-              className="text-xs text-gray-100 font-pregular"
-              numberOfLines={1}
-            >
+            <Text className="text-xs text-gray-100 font-pregular" numberOfLines={1}>
               {creator}
             </Text>
           </View>
         </View>
 
         <View className="pt-2">
-          <Image source={icons.menu} className="w-5 h-5" resizeMode="contain" />
+          <TouchableOpacity onPress={handleDelete}>
+            <Image source={icons.menu} className="w-5 h-5" resizeMode="contain" />
+          </TouchableOpacity>
         </View>
       </View>
 

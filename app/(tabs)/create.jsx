@@ -2,6 +2,7 @@ import { useState } from "react";
 import { router } from "expo-router";
 import { ResizeMode, Video } from "expo-av";
 import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
@@ -31,11 +32,11 @@ const Create = () => {
     const result = await DocumentPicker.getDocumentAsync({
       type:
         selectType === "image"
-          ? ["image/png", "image/jpg"]
-          : ["video/mp4", "video/gif"],
+          ? ["image/png", "image/jpg", "image/jpeg"]
+          : ["video/mp4", "video/quicktime", "video/gif"],
     });
 
-    if (!result.canceled) {
+    if (!result.canceled && result.assets && result.assets.length > 0) {
       if (selectType === "image") {
         setForm({
           ...form,
@@ -51,8 +52,50 @@ const Create = () => {
       }
     } else {
       setTimeout(() => {
-        Alert.alert("Document picked", JSON.stringify(result, null, 2));
+        Alert.alert("No media selected or media format invalid.");
       }, 100);
+    }
+  };
+
+  const pickFromPhotosApp = async (selectType) => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission denied", "We need permission to access your media library!");
+      return;
+    }
+
+    let result;
+    if (selectType === "image") {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
+      });
+    } else if (selectType === "video") {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        allowsEditing: true,
+        quality: 1,
+      });
+    }
+
+    // Logging result to verify the structure
+    console.log(result);
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (selectType === "image") {
+        setForm({
+          ...form,
+          thumbnail: result.assets[0],
+        });
+      } else if (selectType === "video") {
+        setForm({
+          ...form,
+          video: result.assets[0],
+        });
+      }
+    } else {
+      Alert.alert("No media selected or media format invalid.");
     }
   };
 
@@ -70,7 +113,7 @@ const Create = () => {
     try {
       await createVideoPost({
         ...form,
-        userId: user.$id,
+        userId: user?.$id,  // Ensure user object exists before accessing $id
       });
 
       Alert.alert("Success", "Post uploaded successfully");
